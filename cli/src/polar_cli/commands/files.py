@@ -50,6 +50,30 @@ def list_files(
     render_list(res.result.items, LIST_COLUMNS, res.result.pagination, get_output_format(ctx))
 
 
+CHUNK_SIZE = 5 * 1024 * 1024  # 5MB chunks for S3 multipart upload
+
+
+def _compute_upload_parts(size: int) -> list[dict[str, object]]:
+    """Compute S3 multipart upload parts for a file."""
+    parts = []
+    chunk_number = 1
+    remaining = size
+    chunk_start = 0
+
+    while remaining > 0:
+        chunk_size = min(CHUNK_SIZE, remaining)
+        parts.append({
+            "number": chunk_number,
+            "chunk_start": chunk_start,
+            "chunk_end": chunk_start + chunk_size,
+        })
+        chunk_number += 1
+        chunk_start += chunk_size
+        remaining -= chunk_size
+
+    return parts
+
+
 @app.command("create")
 @handle_errors
 def create_file(
@@ -60,12 +84,14 @@ def create_file(
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
     service: Annotated[str, typer.Option("--service", help="File service: downloadable, product_media, organization_avatar.")] = "downloadable",
 ) -> None:
-    """Create a file upload entry (returns upload URL)."""
+    """Create a file upload entry (returns upload URLs for multipart upload)."""
+    parts = _compute_upload_parts(size)
     request: dict[str, object] = {
         "service": service,
         "name": name,
         "mime_type": mime_type,
         "size": size,
+        "upload": {"parts": parts},
     }
     if org:
         request["organization_id"] = org
@@ -73,10 +99,9 @@ def create_file(
     with client:
         result = client.files.create(request=request)
     console.print(f"[bold green]File entry created:[/bold green] {result.id}")
-    create_fields = DETAIL_FIELDS + [
-        Column("Upload URL", "upload.url"),
-    ]
-    render_detail(result, create_fields, get_output_format(ctx))
+    console.print(f"[dim]Upload ID: {getattr(result.upload, 'id', 'N/A')}[/dim]")
+    console.print(f"[dim]Parts: {len(parts)}[/dim]")
+    render_detail(result, DETAIL_FIELDS, get_output_format(ctx))
 
 
 @app.command("update")

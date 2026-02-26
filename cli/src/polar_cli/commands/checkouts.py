@@ -73,16 +73,19 @@ def get_checkout(
 @handle_errors
 def create_checkout(
     ctx: typer.Context,
-    product_id: Annotated[str, typer.Option("--product-id", help="Product ID.")],
+    product_ids: Annotated[list[str], typer.Option("--product", help="Product ID (can specify multiple).")],
     success_url: Annotated[str | None, typer.Option("--success-url", help="Redirect after checkout.")] = None,
     customer_email: Annotated[str | None, typer.Option("--customer-email", help="Pre-fill customer email.")] = None,
+    discount_id: Annotated[str | None, typer.Option("--discount-id", help="Discount ID to apply.")] = None,
 ) -> None:
     """Create a checkout session."""
-    request: dict[str, object] = {"product_id": product_id}
+    request: dict[str, object] = {"products": product_ids}
     if success_url:
         request["success_url"] = success_url
     if customer_email:
         request["customer_email"] = customer_email
+    if discount_id:
+        request["discount_id"] = discount_id
     client = get_client(ctx)
     with client:
         checkout = client.checkouts.create(request=request)

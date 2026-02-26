@@ -146,7 +146,7 @@ class TestCheckouts:
     def test_create(self, runner, cli_app, mock_polar):
         co = MagicMock(id="co-new", url="https://polar.sh/checkout/co-new")
         mock_polar.checkouts.create.return_value = co
-        result = runner.invoke(cli_app, ["checkouts", "create", "--product-id", "p-1"])
+        result = runner.invoke(cli_app, ["checkouts", "create", "--product", "p-1"])
         assert result.exit_code == 0
         assert "Checkout created" in result.output
 
