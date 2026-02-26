@@ -54,7 +54,7 @@ def list_events(
         kwargs["query"] = query
     with client:
         res = client.events.list(**kwargs)
-    render_list(res.result.items, LIST_COLUMNS, res.result.pagination, get_output_format(ctx))
+    render_list(res.items, LIST_COLUMNS, res.pagination, get_output_format(ctx))
 
 
 @app.command("get")
@@ -93,7 +93,7 @@ def list_names(
         kwargs["query"] = query
     with client:
         res = client.events.list_names(**kwargs)
-    render_list(res.result.items, NAME_COLUMNS, res.result.pagination, get_output_format(ctx))
+    render_list(res.items, NAME_COLUMNS, res.pagination, get_output_format(ctx))
 
 
 @app.command("ingest")

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from tests.conftest import make_list_result
+from tests.conftest import make_direct_list_result, make_list_result
 
 
 # --- Customers: update, delete ---
@@ -235,7 +235,7 @@ class TestMeters:
 class TestEvents:
     def test_list(self, runner, cli_app, mock_polar, mocker):
         e = MagicMock(id="evt-1", name="page.view", source="api", customer_id="c-1", created_at="2024-01-01")
-        mock_polar.events.list.return_value = make_list_result([e])
+        mock_polar.events.list.return_value = make_direct_list_result([e])
         mocker.patch("polar_cli.commands.events.resolve_org_id", return_value="org-1")
         result = runner.invoke(cli_app, ["events", "list"])
         assert result.exit_code == 0

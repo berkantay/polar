@@ -47,3 +47,11 @@ def make_list_result(items: list, total_count: int | None = None):
     result.result.items = items
     result.result.pagination = make_pagination(total_count if total_count is not None else len(items))
     return result
+
+
+def make_direct_list_result(items: list, total_count: int | None = None):
+    """Create a mock list result with items/pagination at top level (for events API)."""
+    result = MagicMock()
+    result.items = items
+    result.pagination = make_pagination(total_count if total_count is not None else len(items))
+    return result

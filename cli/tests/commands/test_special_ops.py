@@ -6,7 +6,7 @@ orders export/generate-invoice/update, subscriptions create/export.
 
 from unittest.mock import MagicMock
 
-from tests.conftest import make_list_result
+from tests.conftest import make_direct_list_result, make_list_result
 
 
 # --- customers: export, state ---
@@ -56,7 +56,7 @@ class TestEventsNames:
         n = MagicMock()
         n.name = "page.view"
         n.source = "api"
-        mock_polar.events.list_names.return_value = make_list_result([n])
+        mock_polar.events.list_names.return_value = make_direct_list_result([n])
         mocker.patch("polar_cli.commands.events.resolve_org_id", return_value="org-1")
         result = runner.invoke(cli_app, ["events", "names"])
         assert result.exit_code == 0
