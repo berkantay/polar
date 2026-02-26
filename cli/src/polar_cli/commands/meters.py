@@ -71,8 +71,8 @@ def get_meter(
 def create_meter(
     ctx: typer.Context,
     name: Annotated[str, typer.Option("--name", help="Meter name.")],
-    filter_json: Annotated[str, typer.Option("--filter", help="Event filter (JSON).")],
-    aggregation: Annotated[str, typer.Option("--aggregation", help="Aggregation (JSON).")],
+    filter_json: Annotated[str, typer.Option("--filter", help='Event filter JSON. Example: \'{"conjunction": "and", "clauses": [{"property": "type", "operator": "eq", "value": "api_call"}]}\'')],
+    aggregation: Annotated[str, typer.Option("--aggregation", help='Aggregation JSON. Example: \'{"func": "count"}\' or \'{"func": "sum", "property": "amount"}\'')],
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
 ) -> None:
     """Create a meter."""

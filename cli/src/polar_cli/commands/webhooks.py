@@ -167,9 +167,10 @@ def create_endpoint(
     url: Annotated[str, typer.Option("--url", help="Endpoint URL.")],
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
     events: Annotated[list[str] | None, typer.Option("--event", help="Event types to subscribe to (repeat for multiple).")] = None,
+    format: Annotated[str, typer.Option("--format", help="Payload format: raw or discord.")] = "raw",
 ) -> None:
     """Create a webhook endpoint."""
-    request: dict[str, object] = {"url": url}
+    request: dict[str, object] = {"url": url, "format": format}
     if org:
         request["organization_id"] = org
     if events:

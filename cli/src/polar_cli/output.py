@@ -46,7 +46,14 @@ def _format_value(value: object) -> str:
     if isinstance(value, datetime):
         return value.strftime("%Y-%m-%d %H:%M")
     if isinstance(value, list):
-        return ", ".join(str(v) for v in value)
+        # Handle lists of enums
+        formatted = []
+        for v in value:
+            if hasattr(v, "value"):
+                formatted.append(str(v.value))
+            else:
+                formatted.append(str(v))
+        return ", ".join(formatted)
     # Handle enum values - extract the value instead of showing class name
     if hasattr(value, "value"):
         return str(value.value)
