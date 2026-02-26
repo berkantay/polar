@@ -15,12 +15,13 @@ variable "username" {
 }
 
 variable "buckets" {
-  description = "Bucket names for each policy"
+  description = "Bucket names and policy descriptions"
   type = object({
-    customer_invoices = string
-    payout_invoices   = string
-    files             = string
-    public_files      = string
+    customer_invoices = object({ name = string, description = optional(string) })
+    payout_invoices   = object({ name = string, description = optional(string) })
+    files             = object({ name = string, description = optional(string) })
+    public_files      = object({ name = string, description = optional(string) })
+    logs              = object({ name = string, description = optional(string) })
   })
 }
 
@@ -34,7 +35,7 @@ data "aws_iam_policy_document" "customer_invoices" {
       "s3:GetObjectVersion",
       "s3:GetObjectVersionAttributes",
     ]
-    resources = ["arn:aws:s3:::${var.buckets.customer_invoices}/*"]
+    resources = ["arn:aws:s3:::${var.buckets.customer_invoices.name}/*"]
   }
 }
 
@@ -48,7 +49,7 @@ data "aws_iam_policy_document" "payout_invoices" {
       "s3:GetObjectVersion",
       "s3:GetObjectVersionAttributes",
     ]
-    resources = ["arn:aws:s3:::${var.buckets.payout_invoices}/*"]
+    resources = ["arn:aws:s3:::${var.buckets.payout_invoices.name}/*"]
   }
 }
 
@@ -64,7 +65,7 @@ data "aws_iam_policy_document" "files" {
       "s3:DeleteObject",
       "s3:DeleteObjectVersion",
     ]
-    resources = ["arn:aws:s3:::${var.buckets.files}/*"]
+    resources = ["arn:aws:s3:::${var.buckets.files.name}/*"]
   }
 }
 
@@ -80,28 +81,48 @@ data "aws_iam_policy_document" "public_files" {
       "s3:DeleteObject",
       "s3:DeleteObjectVersion",
     ]
-    resources = ["arn:aws:s3:::${var.buckets.public_files}/*"]
+    resources = ["arn:aws:s3:::${var.buckets.public_files.name}/*"]
+  }
+}
+
+data "aws_iam_policy_document" "logs" {
+  statement {
+    sid = "AllowWriteLogs"
+    actions = [
+      "s3:PutObject",
+    ]
+    resources = ["arn:aws:s3:::${var.buckets.logs.name}/*"]
   }
 }
 
 resource "aws_iam_policy" "customer_invoices" {
-  name   = var.buckets.customer_invoices
-  policy = data.aws_iam_policy_document.customer_invoices.json
+  name        = var.buckets.customer_invoices.name
+  description = var.buckets.customer_invoices.description
+  policy      = data.aws_iam_policy_document.customer_invoices.json
 }
 
 resource "aws_iam_policy" "payout_invoices" {
-  name   = var.buckets.payout_invoices
-  policy = data.aws_iam_policy_document.payout_invoices.json
+  name        = var.buckets.payout_invoices.name
+  description = var.buckets.payout_invoices.description
+  policy      = data.aws_iam_policy_document.payout_invoices.json
 }
 
 resource "aws_iam_policy" "files" {
-  name   = var.buckets.files
-  policy = data.aws_iam_policy_document.files.json
+  name        = var.buckets.files.name
+  description = var.buckets.files.description
+  policy      = data.aws_iam_policy_document.files.json
 }
 
 resource "aws_iam_policy" "public_files" {
-  name   = var.buckets.public_files
-  policy = data.aws_iam_policy_document.public_files.json
+  name        = var.buckets.public_files.name
+  description = var.buckets.public_files.description
+  policy      = data.aws_iam_policy_document.public_files.json
+}
+
+resource "aws_iam_policy" "logs" {
+  name        = var.buckets.logs.name
+  description = var.buckets.logs.description
+  policy      = data.aws_iam_policy_document.logs.json
 }
 
 resource "aws_iam_user_policy_attachment" "customer_invoices" {
@@ -122,4 +143,9 @@ resource "aws_iam_user_policy_attachment" "files" {
 resource "aws_iam_user_policy_attachment" "public_files" {
   user       = var.username
   policy_arn = aws_iam_policy.public_files.arn
+}
+
+resource "aws_iam_user_policy_attachment" "logs" {
+  user       = var.username
+  policy_arn = aws_iam_policy.logs.arn
 }

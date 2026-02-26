@@ -154,7 +154,7 @@ module "image_resizer" {
   s3_bucket         = aws_s3_bucket.lambda_artifacts.id
   s3_key            = data.aws_s3_object.image_resizer_package.key
   s3_object_version = data.aws_s3_object.image_resizer_package.version_id
-  source_bucket_arn = module.s3_buckets.public_assets_bucket_arn
+  source_bucket_arn = module.s3_buckets.public_files_bucket_arn
 }
 
 
@@ -169,12 +169,12 @@ module "cloudfront_public_assets" {
     aws.us_east_1 = aws.us_east_1
   }
 
-  name                           = "polar-public-assets"
-  domain                         = "assets.polar.sh"
+  name                           = "polar-public-files"
+  domain                         = "uploads.polar.sh"
   cloudflare_zone_id             = "22bcd1b07ec25452aab472486bc8df94"
-  s3_bucket_id                   = module.s3_buckets.public_assets_bucket_id
-  s3_bucket_regional_domain_name = module.s3_buckets.public_assets_bucket_regional_domain_name
-  s3_bucket_arn                  = module.s3_buckets.public_assets_bucket_arn
+  s3_bucket_id                   = module.s3_buckets.public_files_bucket_id
+  s3_bucket_regional_domain_name = module.s3_buckets.public_files_bucket_regional_domain_name
+  s3_bucket_arn                  = module.s3_buckets.public_files_bucket_arn
 
   lambda_function_associations = [
     {
@@ -291,10 +291,11 @@ module "application_access_production" {
   source   = "../modules/application_access"
   username = "polar-production-files"
   buckets = {
-    customer_invoices = "polar-customer-invoices"
-    payout_invoices   = "polar-payout-invoices"
-    files             = "polar-production-files"
-    public_files      = "polar-public-files"
+    customer_invoices = { name = "polar-customer-invoices" }
+    payout_invoices   = { name = "polar-payout-invoices" }
+    files             = { name = "polar-production-files", description = "Policy used by our app for downloadable benefits. Keep permissions to a bare minimum." }
+    public_files      = { name = "polar-public-files", description = "Policy used by our app for public uploads -products medias and such-. Keep permissions to a bare minimum." }
+    logs              = { name = "polar-production-logs", description = "Policy used by our app to write OpenTelemetry spans to S3 for long-term backup." }
   }
 }
 
@@ -306,9 +307,25 @@ resource "aws_iam_policy" "lambda_artifacts_upload" {
       {
         Effect = "Allow"
         Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
           "s3:PutObject"
         ]
         Resource = "${aws_s3_bucket.lambda_artifacts.arn}/*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:GetFunction",
+          "lambda:UpdateFunctionCode",
+          "lambda:PublishVersion"
+        ]
+        Resource = [
+          "arn:aws:lambda:us-east-1:*:function:polar-image-resizer",
+          "arn:aws:lambda:us-east-1:*:function:polar-image-resizer:*",
+          "arn:aws:lambda:us-east-1:*:function:polar-sandbox-image-resizer",
+          "arn:aws:lambda:us-east-1:*:function:polar-sandbox-image-resizer:*"
+        ]
       }
     ]
   })

@@ -1,7 +1,7 @@
 import io
 import logging
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
 import boto3
 from botocore.exceptions import ClientError
@@ -33,9 +33,11 @@ def snap_to_size(value: int) -> int:
 
 def get_bucket_from_origin(request: dict[str, Any]) -> str | None:
     origin = request.get("origin", {})
-    s3_origin = origin.get("s3", {})
-    domain = s3_origin.get("domainName", "")
-    return domain.split(".")[0] if domain else None
+    for origin_type in ("s3", "custom"):
+        domain = origin.get(origin_type, {}).get("domainName", "")
+        if domain:
+            return domain.split(".")[0]
+    return None
 
 
 def is_image(uri: str) -> bool:
@@ -51,10 +53,19 @@ def get_content_type(key: str) -> str:
     return "application/octet-stream"
 
 
+def uri_to_s3_key(uri: str) -> str:
+    return unquote(urlparse(uri).path).lstrip("/")
+
+
+def s3_key_to_uri(key: str) -> str:
+    return "/" + quote(key, safe="/")
+
+
 def resize_image(
     image_bytes: bytes, width: int | None, height: int | None
 ) -> bytes | None:
     img = Image.open(io.BytesIO(image_bytes))
+    orig_format = img.format
     orig_w, orig_h = img.size
 
     if width and width >= orig_w and not height:
@@ -74,7 +85,7 @@ def resize_image(
         img = img.resize((int(orig_w * ratio), height), Resampling.LANCZOS)
 
     buf = io.BytesIO()
-    fmt = img.format or "JPEG"
+    fmt = orig_format or "JPEG"
     save_kwargs: dict[str, Any] = {}
     if fmt.upper() in ("JPEG", "JPG"):
         fmt = "JPEG"
@@ -92,6 +103,8 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     request: dict[str, Any] = event["Records"][0]["cf"]["request"]
     uri: str = request["uri"]
     querystring: str = request.get("querystring", "")
+
+    logger.info("uri=%s querystring=%s", uri, querystring)
 
     if not querystring or not is_image(uri):
         return request
@@ -117,12 +130,13 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         logger.error("Could not determine bucket from origin")
         return request
 
-    original_key = uri.lstrip("/")
+    original_key = uri_to_s3_key(uri)
     resized_key = f"resized/{width}x{height}/{original_key}"
+    resized_uri = s3_key_to_uri(resized_key)
 
     try:
         s3.head_object(Bucket=bucket, Key=resized_key)
-        request["uri"] = f"/{resized_key}"
+        request["uri"] = resized_uri
         request["querystring"] = ""
         return request
     except ClientError as e:
@@ -160,6 +174,6 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         logger.exception("Error storing resized image")
         return request
 
-    request["uri"] = f"/{resized_key}"
+    request["uri"] = resized_uri
     request["querystring"] = ""
     return request
