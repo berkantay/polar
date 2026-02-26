@@ -26,7 +26,7 @@ jobs:
               - '.github/workflows/test_cli.yaml'
 
   test:
-    name: "CLI: Tests 🐍"
+    name: "CLI: Tests"
     needs: changes
     if: needs.changes.outputs.cli == 'true'
     timeout-minutes: 10
@@ -47,10 +47,10 @@ jobs:
         with:
           python-version-file: "cli/pyproject.toml"
 
-      - name: 🔧 Install dependencies
+      - name: Install dependencies
         working-directory: ./cli
         run: uv sync --dev
 
-      - name: 🐍 Run tests (pytest)
+      - name: Run tests (pytest)
         working-directory: ./cli
         run: uv run pytest

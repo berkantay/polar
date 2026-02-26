@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   test:
-    name: "Test 🐍"
+    name: "Test"
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -28,16 +28,16 @@ jobs:
         with:
           python-version-file: "cli/pyproject.toml"
 
-      - name: 🔧 Install dependencies
+      - name: Install dependencies
         working-directory: ./cli
         run: uv sync --dev
 
-      - name: 🐍 Run tests (pytest)
+      - name: Run tests (pytest)
         working-directory: ./cli
         run: uv run pytest
 
   build:
-    name: "Build 📦"
+    name: "Build"
     needs: test
     runs-on: ubuntu-latest
 
@@ -56,7 +56,7 @@ jobs:
         with:
           python-version-file: "cli/pyproject.toml"
 
-      - name: 📦 Build sdist and wheel
+      - name: Build sdist and wheel
         working-directory: ./cli
         run: uv build
 
@@ -67,7 +67,7 @@ jobs:
           path: cli/dist/
 
   publish-testpypi:
-    name: "Publish to TestPyPI 🧪"
+    name: "Publish to TestPyPI"
     needs: build
     runs-on: ubuntu-latest
     environment: testpypi
@@ -87,7 +87,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-pypi:
-    name: "Publish to PyPI 🚀"
+    name: "Publish to PyPI"
     needs: build
     runs-on: ubuntu-latest
     environment: pypi
