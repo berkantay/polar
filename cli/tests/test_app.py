@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
+import re
+
 from typer.testing import CliRunner
 
 from polar_cli import __version__
 from polar_cli.app import app
 
-runner = CliRunner(env={"NO_COLOR": "1"})
+runner = CliRunner()
+
+# Regex to strip ANSI escape codes from Rich output
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def strip_ansi(text: str) -> str:
+    """Remove ANSI escape codes from text."""
+    return ANSI_RE.sub("", text)
 
 
 class TestVersion:
@@ -27,9 +37,10 @@ class TestHelp:
     def test_help_flag(self):
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "--sandbox" in result.output
-        assert "--output" in result.output
-        assert "--base-url" in result.output
+        output = strip_ansi(result.output)
+        assert "--sandbox" in output
+        assert "--output" in output
+        assert "--base-url" in output
 
 
 class TestOutputValidation:
