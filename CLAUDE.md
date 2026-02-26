@@ -71,6 +71,16 @@ For Stripe, add to `server/.env`:
 - `STRIPE_PUBLISHABLE_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 
+## CLI
+
+- **Fork**: Development happens on `berkantay/polar` (origin), not `polarsource/polar`
+- **Versioning**: Dynamic via `hatch-vcs` from `cli/v*` git tags (e.g. `cli/v0.1.0`)
+- **CI**: `.github/workflows/test_cli.yaml` (tests on PR) + `.github/workflows/release_cli.yaml` (publish on tag)
+- **PyPI Trusted Publisher**: Must be configured against `berkantay/polar` (the fork), not `polarsource/polar`
+  - TestPyPI: owner=`berkantay`, repo=`polar`, workflow=`release_cli.yaml`, environment=`testpypi`
+  - PyPI: owner=`berkantay`, repo=`polar`, workflow=`release_cli.yaml`, environment=`pypi`
+- **Release**: `git tag cli/v0.1.0 && git push origin cli/v0.1.0`
+
 ## Key Integrations
 
 - **Stripe**: Payment processing

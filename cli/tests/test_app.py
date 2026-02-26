@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typer.testing import CliRunner
 
+from polar_cli import __version__
 from polar_cli.app import app
 
 runner = CliRunner()
@@ -13,7 +14,7 @@ class TestVersion:
     def test_version_flag(self):
         result = runner.invoke(app, ["--version"])
         assert result.exit_code == 0
-        assert "polar 0.1.0" in result.output
+        assert f"polar {__version__}" in result.output
 
 
 class TestHelp:

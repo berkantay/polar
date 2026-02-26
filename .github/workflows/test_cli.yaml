@@ -1,0 +1,56 @@
+name: CLI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: "Detect changes"
+    runs-on: ubuntu-latest
+    outputs:
+      cli: ${{ steps.filter.outputs.cli }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            cli:
+              - 'cli/**'
+              - '.github/workflows/test_cli.yaml'
+
+  test:
+    name: "CLI: Tests 🐍"
+    needs: changes
+    if: needs.changes.outputs.cli == 'true'
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "cli/pyproject.toml"
+
+      - name: 🔧 Install dependencies
+        working-directory: ./cli
+        run: uv sync --dev
+
+      - name: 🐍 Run tests (pytest)
+        working-directory: ./cli
+        run: uv run pytest
