@@ -11,7 +11,7 @@ from polar_cli.config import set_default_org_id
 from polar_cli.context import get_cli_context
 from polar_cli.errors import handle_errors
 from polar_cli.output import Column, render_detail, render_list
-from polar_cli.utils import get_output_format
+from polar_cli.utils import get_org_by_id_or_slug, get_output_format
 
 app = typer.Typer(name="org", help="Manage organizations.")
 console = Console()
@@ -55,7 +55,7 @@ def get_org(
     """Get details for an organization."""
     client = get_client(ctx)
     with client:
-        org = client.organizations.get(id=id)
+        org = get_org_by_id_or_slug(client, id)
     render_detail(org, DETAIL_FIELDS, get_output_format(ctx))
 
 
@@ -70,7 +70,7 @@ def set_default(
     client = get_client(ctx)
 
     with client:
-        org = client.organizations.get(id=id)
+        org = get_org_by_id_or_slug(client, id)
 
     set_default_org_id(cli_ctx.environment, str(org.id))
     console.print(f"[bold green]Default organization set:[/bold green] {org.name} ({org.slug})")
@@ -110,6 +110,7 @@ def update_org(
         raise typer.Exit()
     client = get_client(ctx)
     with client:
-        org = client.organizations.update(id=id, organization_update=update)
+        org = get_org_by_id_or_slug(client, id)
+        org = client.organizations.update(id=str(org.id), organization_update=update)
     console.print(f"[bold green]Organization updated:[/bold green] {org.name} ({org.slug})")
     render_detail(org, DETAIL_FIELDS, get_output_format(ctx))

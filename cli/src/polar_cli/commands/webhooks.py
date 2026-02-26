@@ -169,8 +169,9 @@ def create_endpoint(
     events: Annotated[list[str] | None, typer.Option("--event", help="Event types to subscribe to (repeat for multiple).")] = None,
 ) -> None:
     """Create a webhook endpoint."""
-    org_id = resolve_org_id(ctx, org)
-    request: dict[str, object] = {"url": url, "organization_id": org_id}
+    request: dict[str, object] = {"url": url}
+    if org:
+        request["organization_id"] = org
     if events:
         request["events"] = events
     client = get_client(ctx)

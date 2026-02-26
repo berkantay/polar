@@ -61,14 +61,14 @@ def create_file(
     service: Annotated[str, typer.Option("--service", help="File service: downloadable, product_media, organization_avatar.")] = "downloadable",
 ) -> None:
     """Create a file upload entry (returns upload URL)."""
-    org_id = resolve_org_id(ctx, org)
     request: dict[str, object] = {
         "service": service,
         "name": name,
         "mime_type": mime_type,
         "size": size,
-        "organization_id": org_id,
     }
+    if org:
+        request["organization_id"] = org
     client = get_client(ctx)
     with client:
         result = client.files.create(request=request)

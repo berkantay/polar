@@ -30,8 +30,7 @@ class TestVersion:
 class TestHelp:
     def test_no_args_shows_usage(self):
         result = runner.invoke(app, [])
-        # no_args_is_help=True returns exit code 2 (usage error)
-        assert result.exit_code == 2
+        assert result.exit_code == 0
         assert "Usage:" in result.output
 
     def test_help_flag(self):

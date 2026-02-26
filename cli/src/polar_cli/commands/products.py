@@ -77,14 +77,15 @@ def create_product(
     recurring_interval: Annotated[str | None, typer.Option("--recurring-interval", help="Recurring interval: month or year.")] = None,
 ) -> None:
     """Create a new product."""
-    org_id = resolve_org_id(ctx, org)
     client = get_client(ctx)
 
     request: dict[str, object] = {
         "name": name,
-        "organization_id": org_id,
         "prices": [],
     }
+    # Only include organization_id if explicitly provided (org-scoped tokens don't need it)
+    if org:
+        request["organization_id"] = org
     if description is not None:
         request["description"] = description
     if recurring_interval:

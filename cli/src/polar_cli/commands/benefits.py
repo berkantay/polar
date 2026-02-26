@@ -81,14 +81,14 @@ def create_benefit(
 
     For types other than 'custom', pass type-specific properties via --properties JSON.
     """
-    org_id = resolve_org_id(ctx, org)
     request: dict[str, object] = {
         "type": type,
         "description": description,
-        "organization_id": org_id,
         "selectable": selectable,
         "is_tax_applicable": is_tax_applicable,
     }
+    if org:
+        request["organization_id"] = org
     if properties_json:
         import json
         request["properties"] = json.loads(properties_json)

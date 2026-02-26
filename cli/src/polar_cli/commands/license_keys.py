@@ -112,9 +112,10 @@ def validate_license_key(
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
 ) -> None:
     """Validate a license key."""
-    org_id = resolve_org_id(ctx, org)
     client = get_client(ctx)
-    request: dict[str, object] = {"key": key, "organization_id": org_id}
+    request: dict[str, object] = {"key": key}
+    if org:
+        request["organization_id"] = org
     with client:
         result = client.license_keys.validate(request=request)
     console.print("[bold green]Valid[/bold green]")
@@ -138,9 +139,10 @@ def activate_license_key(
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
 ) -> None:
     """Activate a license key."""
-    org_id = resolve_org_id(ctx, org)
     client = get_client(ctx)
-    request: dict[str, object] = {"key": key, "organization_id": org_id, "label": label}
+    request: dict[str, object] = {"key": key, "label": label}
+    if org:
+        request["organization_id"] = org
     with client:
         result = client.license_keys.activate(request=request)
     console.print("[bold green]Activated[/bold green]")
@@ -156,9 +158,10 @@ def deactivate_license_key(
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
 ) -> None:
     """Deactivate a license key activation."""
-    org_id = resolve_org_id(ctx, org)
     client = get_client(ctx)
-    request: dict[str, object] = {"key": key, "organization_id": org_id, "activation_id": activation_id}
+    request: dict[str, object] = {"key": key, "activation_id": activation_id}
+    if org:
+        request["organization_id"] = org
     with client:
         client.license_keys.deactivate(request=request)
     console.print("[bold green]Deactivated[/bold green]")

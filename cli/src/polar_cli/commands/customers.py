@@ -75,9 +75,10 @@ def create_customer(
     name: Annotated[str | None, typer.Option("--name", help="Customer name.")] = None,
 ) -> None:
     """Create a new customer."""
-    org_id = resolve_org_id(ctx, org)
     client = get_client(ctx)
-    request: dict[str, object] = {"email": email, "organization_id": org_id}
+    request: dict[str, object] = {"email": email}
+    if org:
+        request["organization_id"] = org
     if name is not None:
         request["name"] = name
     with client:

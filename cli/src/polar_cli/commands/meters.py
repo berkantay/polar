@@ -78,13 +78,13 @@ def create_meter(
     """Create a meter."""
     import json
 
-    org_id = resolve_org_id(ctx, org)
     request: dict[str, object] = {
         "name": name,
         "filter": json.loads(filter_json),
         "aggregation": json.loads(aggregation),
-        "organization_id": org_id,
     }
+    if org:
+        request["organization_id"] = org
     client = get_client(ctx)
     with client:
         meter = client.meters.create(request=request)

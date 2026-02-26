@@ -79,14 +79,14 @@ def create_custom_field(
     """Create a custom field."""
     import json as json_mod
 
-    org_id = resolve_org_id(ctx, org)
     request: dict[str, object] = {
         "type": type,
         "name": name,
         "slug": slug,
-        "organization_id": org_id,
         "properties": json_mod.loads(properties_json) if properties_json else {},
     }
+    if org:
+        request["organization_id"] = org
     client = get_client(ctx)
     with client:
         field = client.custom_fields.create(request=request)

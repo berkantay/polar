@@ -77,21 +77,30 @@ def create_discount(
     ctx: typer.Context,
     name: Annotated[str, typer.Option("--name", help="Discount name.")],
     type: Annotated[str, typer.Option("--type", help="Discount type: percentage or fixed.")],
-    amount: Annotated[int, typer.Option("--amount", help="Amount (percentage 1-100, or cents for fixed).")],
+    amount: Annotated[int, typer.Option("--amount", help="For percentage: 1-100 (percent off). For fixed: cents.")],
     org: Annotated[str | None, typer.Option("--org", help="Organization ID.")] = None,
     code: Annotated[str | None, typer.Option("--code", help="Coupon code.")] = None,
     duration: Annotated[str, typer.Option("--duration", help="Duration: once, forever, or repeating.")] = "once",
+    duration_in_months: Annotated[int | None, typer.Option("--duration-in-months", help="Months (required if duration=repeating).")] = None,
+    currency: Annotated[str, typer.Option("--currency", help="Currency for fixed discounts.")] = "usd",
     max_redemptions: Annotated[int | None, typer.Option("--max-redemptions", help="Max number of uses.")] = None,
 ) -> None:
     """Create a discount."""
-    org_id = resolve_org_id(ctx, org)
     request: dict[str, object] = {
         "name": name,
         "type": type,
-        "amount": amount,
         "duration": duration,
-        "organization_id": org_id,
     }
+    # API expects basis_points for percentage, amount+currency for fixed
+    if type == "percentage":
+        request["basis_points"] = amount * 100  # Convert percent to basis points
+    else:
+        request["amount"] = amount
+        request["currency"] = currency
+    if duration == "repeating" and duration_in_months:
+        request["duration_in_months"] = duration_in_months
+    if org:
+        request["organization_id"] = org
     if code:
         request["code"] = code
     if max_redemptions is not None:
