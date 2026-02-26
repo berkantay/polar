@@ -7,7 +7,7 @@ from typer.testing import CliRunner
 from polar_cli import __version__
 from polar_cli.app import app
 
-runner = CliRunner()
+runner = CliRunner(env={"NO_COLOR": "1"})
 
 
 class TestVersion:
